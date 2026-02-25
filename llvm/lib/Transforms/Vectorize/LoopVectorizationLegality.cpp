@@ -1785,8 +1785,10 @@ bool LoopVectorizationLegality::isVectorizableEarlyExitLoop() {
     }
   }
 
+  // For predicated early exits, we only support a single early exit for now.
   BasicBlock *LatchPredBB = LatchBB->getUniquePredecessor();
-  if (LatchPredBB != UncountableExitingBlocks.back()) {
+  if (UncountableExitingBlocks.size() != 1 &&
+      LatchPredBB != UncountableExitingBlocks.back()) {
     reportVectorizationFailure(
         "Last early exiting block in the chain is not the latch predecessor",
         "Cannot vectorize early exit loop", "EarlyExitNotLatchPredecessor", ORE,
