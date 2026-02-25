@@ -1229,6 +1229,26 @@ bool LoopVectorizationLegality::canVectorizeIndirectUnsafeDependences() {
 
 bool LoopVectorizationLegality::canVectorizeMemory() {
   LAI = &LAIs.getInfo(*TheLoop);
+  MemoryDepChecker DepChecker = LAI->getDepChecker();
+  llvm::outs() << "Loop: " << TheLoop->getHeader()->getParent()->getName() << "\n";
+  if (auto *Dependences = DepChecker.getDependences()) {
+	unsigned Depth = 2;
+	llvm::outs().indent(Depth) << "Dependences:\n";
+	for (const auto &Dep : *Dependences) {
+	  llvm::outs().indent(Depth + 2)
+		<< MemoryDepChecker::Dependence::DepName[Dep.Type] << ":\n";		  
+	  Instruction *Src = Dep.getSource(DepChecker);
+	  DebugLoc SrcDbgLoc = Src->getDebugLoc();
+	  Instruction *Dest = Dep.getDestination(DepChecker);
+	  DebugLoc DestDbgLoc = Dest->getDebugLoc();
+	  llvm::outs().indent(Depth + 4) << "Source DebugLoc: ";
+	  SrcDbgLoc.print(llvm::outs());
+	  llvm::outs() << "\n";
+	  llvm::outs().indent(Depth + 4) << "Destination DebugLoc: ";
+	  DestDbgLoc.print(llvm::outs());
+	  llvm::outs() << "\n";
+	}
+  }
   const OptimizationRemarkAnalysis *LAR = LAI->getReport();
   if (LAR) {
     ORE->emit([&]() {
