@@ -1229,7 +1229,7 @@ bool LoopVectorizationLegality::canVectorizeIndirectUnsafeDependences() {
 
 bool LoopVectorizationLegality::canVectorizeMemory() {
   LAI = &LAIs.getInfo(*TheLoop);
-
+#ifdef CANARY 
   auto GetHazardType = [&](Instruction *Src, Instruction *Dest, MemoryDepChecker::Dependence::DepType DepType) -> const char * {
 	bool SrcWrite = Src->mayWriteToMemory();
 	bool SrcRead = Src->mayReadFromMemory();
@@ -1304,7 +1304,7 @@ bool LoopVectorizationLegality::canVectorizeMemory() {
   }
   LLVMContext &Context = TheLoop->getHeader()->getContext();
   Context.diagnose(DiagnosticInfoGeneric(DependenceReport, DiagnosticSeverity::DS_Warning));
-
+#endif
   const OptimizationRemarkAnalysis *LAR = LAI->getReport();
   if (LAR) {
     ORE->emit([&]() {
