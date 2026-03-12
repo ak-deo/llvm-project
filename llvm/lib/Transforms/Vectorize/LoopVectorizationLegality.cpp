@@ -1303,7 +1303,7 @@ bool LoopVectorizationLegality::canVectorizeMemory() {
 	}
   }
   LLVMContext &Context = TheLoop->getHeader()->getContext();
-  Context.diagnose(DiagnosticInfoGeneric(DependenceReport, DiagnosticSeverity::DS_Warning));
+  Context.diagnose(DiagnosticInfoGenericWithLoc(DependenceReport, *TheLoop->getHeader()->getParent(), TheLoop->getStartLoc(), DiagnosticSeverity::DS_Warning));
 #endif
   const OptimizationRemarkAnalysis *LAR = LAI->getReport();
   if (LAR) {
