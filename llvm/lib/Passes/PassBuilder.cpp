@@ -379,6 +379,7 @@
 #include "llvm/Transforms/Utils/SymbolRewriter.h"
 #include "llvm/Transforms/Utils/UnifyFunctionExitNodes.h"
 #include "llvm/Transforms/Utils/UnifyLoopExits.h"
+#include "llvm/Transforms/Utils/MyLivenessAnalysis.h"
 #include "llvm/Transforms/Vectorize/LoadStoreVectorizer.h"
 #include "llvm/Transforms/Vectorize/LoopIdiomVectorize.h"
 #include "llvm/Transforms/Vectorize/LoopVectorize.h"
