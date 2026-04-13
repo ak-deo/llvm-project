@@ -569,6 +569,7 @@ FUNCTION_PASS("view-post-dom", PostDomViewer())
 FUNCTION_PASS("view-post-dom-only", PostDomOnlyViewer())
 FUNCTION_PASS("wasm-eh-prepare", WasmEHPreparePass())
 FUNCTION_PASS("my-liveness-analysis", MyLivenessAnalysisPass())
+FUNCTION_PASS("my-dce", MyDCEPass())
 #undef FUNCTION_PASS
 
 #ifndef FUNCTION_PASS_WITH_PARAMS
