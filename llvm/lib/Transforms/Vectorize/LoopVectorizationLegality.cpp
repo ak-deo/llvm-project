@@ -1200,80 +1200,80 @@ bool LoopVectorizationLegality::canVectorizeIndirectUnsafeDependences() {
 bool LoopVectorizationLegality::canVectorizeMemory() {
   LAI = &LAIs.getInfo(*TheLoop);
 // #ifdef CANARY
-  auto GetHazardType = [&](Instruction *Src, Instruction *Dest, MemoryDepChecker::Dependence::DepType DepType) -> const char * {
-    bool SrcWrite = Src->mayWriteToMemory();
-    bool SrcRead = Src->mayReadFromMemory();
-    bool DestWrite = Dest->mayWriteToMemory();
-    bool DestRead = Dest->mayReadFromMemory();
+  // auto GetHazardType = [&](Instruction *Src, Instruction *Dest, MemoryDepChecker::Dependence::DepType DepType) -> const char * {
+  //   bool SrcWrite = Src->mayWriteToMemory();
+  //   bool SrcRead = Src->mayReadFromMemory();
+  //   bool DestWrite = Dest->mayWriteToMemory();
+  //   bool DestRead = Dest->mayReadFromMemory();
 
-    // 1. Handle complex/atomic instructions (Both Read & Write)
-    if ((SrcWrite && SrcRead) || (DestWrite && DestRead))
-      return "unknown-hazard ";
+  //   // 1. Handle complex/atomic instructions (Both Read & Write)
+  //   if ((SrcWrite && SrcRead) || (DestWrite && DestRead))
+  //     return "unknown-hazard ";
 
-    // 2. Determine if we need to flip our interpretation.
-    // In LLVM, 'Backward' means the data flow is actually reversed
-    // relative to the program order of Src and Dest.
-        bool IsBackward =
-            (DepType == MemoryDepChecker::Dependence::Backward ||
-             DepType == MemoryDepChecker::Dependence::BackwardVectorizable ||
-             DepType == MemoryDepChecker::Dependence::BackwardVectorizableButPreventsForwarding);
+  //   // 2. Determine if we need to flip our interpretation.
+  //   // In LLVM, 'Backward' means the data flow is actually reversed
+  //   // relative to the program order of Src and Dest.
+  //       bool IsBackward =
+  //           (DepType == MemoryDepChecker::Dependence::Backward ||
+  //            DepType == MemoryDepChecker::Dependence::BackwardVectorizable ||
+  //            DepType == MemoryDepChecker::Dependence::BackwardVectorizableButPreventsForwarding);
 
-        if (DepType == MemoryDepChecker::Dependence::NoDep ||
-            DepType == MemoryDepChecker::Dependence::Unknown ||
-            DepType == MemoryDepChecker::Dependence::IndirectUnsafe) {
-          return "unknown-hazard ";
-        }
+  //       if (DepType == MemoryDepChecker::Dependence::NoDep ||
+  //           DepType == MemoryDepChecker::Dependence::Unknown ||
+  //           DepType == MemoryDepChecker::Dependence::IndirectUnsafe) {
+  //         return "unknown-hazard ";
+  //       }
 
-    // 3. Identify the Hazard
-    // RAW: Src Writes, Dest Reads (OR flipped if Backward)
-    if ((SrcWrite && DestRead && !IsBackward) || (SrcRead && DestWrite && IsBackward))
-      return "read-after-write ";
+  //   // 3. Identify the Hazard
+  //   // RAW: Src Writes, Dest Reads (OR flipped if Backward)
+  //   if ((SrcWrite && DestRead && !IsBackward) || (SrcRead && DestWrite && IsBackward))
+  //     return "read-after-write ";
 
-    // WAR: Src Reads, Dest Writes (OR flipped if Backward)
-    if ((SrcRead && DestWrite && !IsBackward) || (SrcWrite && DestRead && IsBackward))
-      return "write-after-read ";
+  //   // WAR: Src Reads, Dest Writes (OR flipped if Backward)
+  //   if ((SrcRead && DestWrite && !IsBackward) || (SrcWrite && DestRead && IsBackward))
+  //     return "write-after-read ";
 
-    // WAW: Both write (Direction doesn't change the hazard name)
-    if (SrcWrite && DestWrite)
-      return "write-after-write ";
+  //   // WAW: Both write (Direction doesn't change the hazard name)
+  //   if (SrcWrite && DestWrite)
+  //     return "write-after-write ";
 
-    return "unknown-hazard ";
-  };
+  //   return "unknown-hazard ";
+  // };
 
-  std::string DependenceReport;
-  raw_string_ostream DependenceReportOS(DependenceReport);
-  MemoryDepChecker DepChecker = LAI->getDepChecker();
-  StringRef FunctionName = TheLoop->getHeader()->getParent()->getName();
-  auto IsVectorizable = DepChecker.isSafeForVectorization();
-  unsigned Depth = 4;
+  // std::string DependenceReport;
+  // raw_string_ostream DependenceReportOS(DependenceReport);
+  // MemoryDepChecker DepChecker = LAI->getDepChecker();
+  // StringRef FunctionName = TheLoop->getHeader()->getParent()->getName();
+  // auto IsVectorizable = DepChecker.isSafeForVectorization();
+  // unsigned Depth = 4;
 
 
-  DependenceReportOS << "Dependence report for loop in  " << FunctionName << "\n";
-  std::string StatusString = IsVectorizable ? "Vectorizable" : "Not vectorizable";
-  DependenceReportOS << "Status: " << StatusString << "\n";
+  // DependenceReportOS << "Dependence report for loop in  " << FunctionName << "\n";
+  // std::string StatusString = IsVectorizable ? "Vectorizable" : "Not vectorizable";
+  // DependenceReportOS << "Status: " << StatusString << "\n";
 
-  if (auto *Dependences = DepChecker.getDependences()) {
-    for (const auto &Dep : *Dependences) {
-      Instruction *Src = Dep.getSource(DepChecker);
-      Instruction *Dest = Dep.getDestination(DepChecker);
-      DebugLoc SrcDbgLoc = Src->getDebugLoc();
-      DebugLoc DestDbgLoc = Dest->getDebugLoc();
-      const char *DependencyDirection = MemoryDepChecker::Dependence::DepName[Dep.Type];
+  // if (auto *Dependences = DepChecker.getDependences()) {
+  //   for (const auto &Dep : *Dependences) {
+  //     Instruction *Src = Dep.getSource(DepChecker);
+  //     Instruction *Dest = Dep.getDestination(DepChecker);
+  //     DebugLoc SrcDbgLoc = Src->getDebugLoc();
+  //     DebugLoc DestDbgLoc = Dest->getDebugLoc();
+  //     const char *DependencyDirection = MemoryDepChecker::Dependence::DepName[Dep.Type];
 
-      DependenceReportOS.indent(Depth)
-        << DependencyDirection << " "
-        << GetHazardType(Src, Dest, Dep.Type)
-        << "dependence between source (";
-      SrcDbgLoc.print(DependenceReportOS);
-      DependenceReportOS << ") and destination (";
-      DestDbgLoc.print(DependenceReportOS);
-      DependenceReportOS << ")\n";
-      // DependenceReportOS.indent(Depth) << "Source Inst: " << *Src;
-      // DependenceReportOS.indent(Depth) << "Sink Inst: " << *Dest;
-    }
-  }
-  LLVMContext &Context = TheLoop->getHeader()->getContext();
-  Context.diagnose(DiagnosticInfoGenericWithLoc(DependenceReport, *TheLoop->getHeader()->getParent(), TheLoop->getStartLoc(), DiagnosticSeverity::DS_Warning));
+  //     DependenceReportOS.indent(Depth)
+  //       << DependencyDirection << " "
+  //       << GetHazardType(Src, Dest, Dep.Type)
+  //       << "dependence between source (";
+  //     SrcDbgLoc.print(DependenceReportOS);
+  //     DependenceReportOS << ") and destination (";
+  //     DestDbgLoc.print(DependenceReportOS);
+  //     DependenceReportOS << ")\n";
+  //     // DependenceReportOS.indent(Depth) << "Source Inst: " << *Src;
+  //     // DependenceReportOS.indent(Depth) << "Sink Inst: " << *Dest;
+  //   }
+  // }
+  // LLVMContext &Context = TheLoop->getHeader()->getContext();
+  // Context.diagnose(DiagnosticInfoGenericWithLoc(DependenceReport, *TheLoop->getHeader()->getParent(), TheLoop->getStartLoc(), DiagnosticSeverity::DS_Warning));
 // #endif
   const OptimizationRemarkAnalysis *LAR = LAI->getReport();
   if (LAR) {

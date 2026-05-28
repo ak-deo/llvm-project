@@ -2784,13 +2784,35 @@ void LoopAccessInfo::emitUnsafeDependenceRemark() {
     HasForcedDistribution = mdconst::extract<ConstantInt>(*Op)->getZExtValue();
   }
 
-  const std::string Info =
-      HasForcedDistribution
-          ? "unsafe dependent memory operations in loop."
-          : "unsafe dependent memory operations in loop. Use "
-            "#pragma clang loop distribute(enable) to allow loop distribution "
-            "to attempt to isolate the offending operations into a separate "
-            "loop";
+  // AKASH
+  // DONE: Remove #pragma clang loop distribute(enable) recommendation
+  // DONE: Add the GetDependenceType lambda from LoopVectorizationLegality.cpp
+
+  auto GetDependenceType = [&]() -> const char * {
+    Instruction *Src = Dep.getSource(getDepChecker());
+    Instruction *Dst = Dep.getDestination(getDepChecker());
+    bool SrcWrite = Src->mayWriteToMemory();
+    bool SrcRead = Src->mayReadFromMemory();
+    bool DstWrite = Dst->mayWriteToMemory();
+    bool DstRead = Dst->mayReadFromMemory();
+
+	// Handle both read and write
+	if ((SrcWrite && SrcRead) || (DestWrite && DestRead))
+	  return "unknown-hazard ";
+
+	if (SrcRead && DstWrite)
+	  return "read-after-write ";
+
+	if (SrcRead && DstWrite)
+	  return "write-after-read ";
+
+	if (SrcWrite && DstWrite)
+	  return "write-after-write ";
+
+	return "unknown-hazard ";
+  }
+  
+  const std::string Info = "unsafe dependent memory operations in loop.";
   OptimizationRemarkAnalysis &R =
       recordAnalysis("UnsafeDep", Dep.getDestination(getDepChecker())) << Info;
 
@@ -2800,7 +2822,10 @@ void LoopAccessInfo::emitUnsafeDependenceRemark() {
   case MemoryDepChecker::Dependence::BackwardVectorizable:
     llvm_unreachable("Unexpected dependence");
   case MemoryDepChecker::Dependence::Backward:
-    R << "\nBackward loop carried data dependence.";
+    std::string DependenceReport;
+	raw_string_ostream DependenceReportOS(DependenceReport);
+	DependenceReportOS << "Backward" << getDependenceType() << "data dependence.";
+    R << DependenceReport;
     break;
   case MemoryDepChecker::Dependence::ForwardButPreventsForwarding:
     R << "\nForward loop carried data dependence that prevents "
