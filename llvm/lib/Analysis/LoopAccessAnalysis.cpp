@@ -2775,20 +2775,7 @@ void LoopAccessInfo::emitUnsafeDependenceRemark() {
   LLVM_DEBUG(dbgs() << "LAA: unsafe dependent memory operations in loop\n");
 
   // Emit remark for first unsafe dependence
-  bool HasForcedDistribution = false;
-  std::optional<const MDOperand *> Value =
-      findStringMetadataForLoop(TheLoop, "llvm.loop.distribute.enable");
-  if (Value) {
-    const MDOperand *Op = *Value;
-    assert(Op && mdconst::hasa<ConstantInt>(*Op) && "invalid metadata");
-    HasForcedDistribution = mdconst::extract<ConstantInt>(*Op)->getZExtValue();
-  }
-
-  // AKASH
-  // DONE: Remove #pragma clang loop distribute(enable) recommendation
-  // DONE: Add the GetDependenceType lambda from LoopVectorizationLegality.cpp
-
-  auto GetDependenceType = [&]() -> const char * {
+  auto GetDependenceTypeForBackwardDeps = [&]() -> const char * {
     Instruction *Src = Dep.getSource(getDepChecker());
     Instruction *Dst = Dep.getDestination(getDepChecker());
     bool SrcWrite = Src->mayWriteToMemory();
@@ -2812,7 +2799,10 @@ void LoopAccessInfo::emitUnsafeDependenceRemark() {
 	return "unknown-hazard ";
   };
   
-  const std::string Info = "unsafe dependent memory operations in loop.";
+  const std::string Info = 
+	"unsafe dependent memory operations in loop. "
+	"Attempt loop splitting to isolate the "
+	"offending operations in another loop";
   OptimizationRemarkAnalysis &R =
       recordAnalysis("UnsafeDep", Dep.getDestination(getDepChecker())) << Info;
 
@@ -2826,7 +2816,7 @@ void LoopAccessInfo::emitUnsafeDependenceRemark() {
   case MemoryDepChecker::Dependence::BackwardVectorizable:
     llvm_unreachable("Unexpected dependence");
   case MemoryDepChecker::Dependence::Backward:
-	DependenceReportOS << "Backward" << GetDependenceType() << "data dependence.";
+	DependenceReportOS << "\nBackward " << GetDependenceTypeForBackwardDeps() << "data dependence.";
     R << DependenceReport;
     break;
   case MemoryDepChecker::Dependence::ForwardButPreventsForwarding:
