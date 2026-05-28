@@ -2797,34 +2797,36 @@ void LoopAccessInfo::emitUnsafeDependenceRemark() {
     bool DstRead = Dst->mayReadFromMemory();
 
 	// Handle both read and write
-	if ((SrcWrite && SrcRead) || (DestWrite && DestRead))
+	if ((SrcWrite && SrcRead) || (DstWrite && DstRead))
 	  return "unknown-hazard ";
 
 	if (SrcRead && DstWrite)
 	  return "read-after-write ";
 
-	if (SrcRead && DstWrite)
+	if (SrcWrite && DstRead)
 	  return "write-after-read ";
 
 	if (SrcWrite && DstWrite)
 	  return "write-after-write ";
 
 	return "unknown-hazard ";
-  }
+  };
   
   const std::string Info = "unsafe dependent memory operations in loop.";
   OptimizationRemarkAnalysis &R =
       recordAnalysis("UnsafeDep", Dep.getDestination(getDepChecker())) << Info;
 
+  std::string DependenceReport;
+  raw_string_ostream DependenceReportOS(DependenceReport);
+
+  
   switch (Dep.Type) {
   case MemoryDepChecker::Dependence::NoDep:
   case MemoryDepChecker::Dependence::Forward:
   case MemoryDepChecker::Dependence::BackwardVectorizable:
     llvm_unreachable("Unexpected dependence");
   case MemoryDepChecker::Dependence::Backward:
-    std::string DependenceReport;
-	raw_string_ostream DependenceReportOS(DependenceReport);
-	DependenceReportOS << "Backward" << getDependenceType() << "data dependence.";
+	DependenceReportOS << "Backward" << GetDependenceType() << "data dependence.";
     R << DependenceReport;
     break;
   case MemoryDepChecker::Dependence::ForwardButPreventsForwarding:
