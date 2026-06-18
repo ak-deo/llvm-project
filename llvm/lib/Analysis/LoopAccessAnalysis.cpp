@@ -2798,25 +2798,24 @@ void LoopAccessInfo::emitUnsafeDependenceRemark() {
 
 	return "unknown-hazard ";
   };
-  
-  const std::string Info = 
-	"unsafe dependent memory operations in loop. "
-	"Attempt loop splitting to isolate the "
-	"offending operations in another loop";
+
+  const std::string Info =
+	"unsafe dependent memory operations in loop. ";
+
   OptimizationRemarkAnalysis &R =
       recordAnalysis("UnsafeDep", Dep.getDestination(getDepChecker())) << Info;
 
   std::string DependenceReport;
   raw_string_ostream DependenceReportOS(DependenceReport);
 
-  
+
   switch (Dep.Type) {
   case MemoryDepChecker::Dependence::NoDep:
   case MemoryDepChecker::Dependence::Forward:
   case MemoryDepChecker::Dependence::BackwardVectorizable:
     llvm_unreachable("Unexpected dependence");
   case MemoryDepChecker::Dependence::Backward:
-	DependenceReportOS << "\nBackward " << GetDependenceTypeForBackwardDeps() << "data dependence.";
+	DependenceReportOS << "\nBackward " << "loop-carried " << "data dependence.";
     R << DependenceReport;
     break;
   case MemoryDepChecker::Dependence::ForwardButPreventsForwarding:
